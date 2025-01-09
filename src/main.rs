@@ -1,5 +1,7 @@
 mod token;
 mod lexer;
+mod parser;
+mod ast;
 
 use std::io::Write;
 
@@ -20,12 +22,22 @@ fn main() {
                 }
                 
                 let mut lexer = lexer::Lexer::new(input);
+                let mut tokens = Vec::new();
+                
                 loop {
                     let token = lexer.next_token();
-                    println!("{:?}", token);
                     if token == token::Token::EOF {
                         break;
                     }
+                    tokens.push(token);
+                }
+
+                let mut parser = parser::Parser::new(tokens);
+                match parser.parse() {
+                    ast::Node::Program(statements) => {
+                        println!("AST: {:#?}", statements);
+                    }
+                    _ => println!("Failed to parse program"),
                 }
             }
             Err(error) => println!("error: {}", error),
