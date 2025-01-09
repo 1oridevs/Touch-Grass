@@ -10,6 +10,13 @@ pub enum Token {
     Then, // Then Keyword
     FrFr, // Block Ending
 
+    // REAL-LIFE OPERATORS
+    NoCap,
+    Cap,
+    Bugatti,
+
+
+
     // Literals for the lang
     String(String),
     Number(i64),
@@ -18,9 +25,12 @@ pub enum Token {
     GreaterThan,
     LessThan,
     Equals,
+    Plus,
+    Minus,
 
     // Identifiers and everything else
 
     Identifier(String),
+    Comment,
     EOF,
 }
