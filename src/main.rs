@@ -33,12 +33,8 @@ fn main() {
                 }
 
                 let mut parser = parser::Parser::new(tokens);
-                match parser.parse() {
-                    ast::Node::Program(statements) => {
-                        println!("AST: {:#?}", statements);
-                    }
-                    _ => println!("Failed to parse program"),
-                }
+                let ast = parser.parse();
+                println!("AST: {:#?}", ast);
             }
             Err(error) => println!("error: {}", error),
         }

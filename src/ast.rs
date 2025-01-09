@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub enum Node {
-    Program(Vec<Node),
+    Program(Vec<Node>),
 
     VarDeclaration {
         name: String,

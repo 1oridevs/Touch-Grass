@@ -27,7 +27,7 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Option<Node> {
-        match self.peek() {
+        match self.peek_token() {
             Some(Token::TouchGrass) => self.parse_var_declaration(),
             Some(Token::Print) => self.parse_print_statement(),
             _ => None,
@@ -37,21 +37,23 @@ impl Parser {
     fn parse_var_declaration(&mut self) -> Option<Node> {
         self.advance(); // consume TouchGrass
         
-        let var_type = if let Some(Token::NumberType) = self.peek() {
+        let var_type = if let Some(Token::NumberType) = self.peek_token() {
             self.advance();
             "number".to_string()
         } else {
             return None;
         };
 
-        let name = if let Some(Token::Identifier(name)) = self.peek() {
-            self.advance();
-            name
-        } else {
-            return None;
+        let name = match self.peek_token() {
+            Some(Token::Identifier(ref name)) => {
+                let name = name.clone();
+                self.advance();
+                name
+            }
+            _ => return None,
         };
 
-        if let Some(Token::As) = self.peek() {
+        if let Some(Token::As) = self.peek_token() {
             self.advance();
         } else {
             return None;
@@ -73,36 +75,39 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Option<Node> {
-        match self.peek() {
-            Some(Token::Number(n)) => {
+        match self.peek_token()? {
+            Token::Number(n) => {
+                let val = *n;
                 self.advance();
-                Some(Node::NumberLiteral(n))
+                Some(Node::NumberLiteral(val))
             }
-            Some(Token::String(s)) => {
+            Token::String(ref s) => {
+                let val = s.clone();
                 self.advance();
-                Some(Node::StringLiteral(s.clone()))
+                Some(Node::StringLiteral(val))
             }
-            Some(Token::Cap) => {
+            Token::Cap => {
                 self.advance();
                 Some(Node::Boolean(false))
             }
-            Some(Token::NoCap) => {
+            Token::NoCap => {
                 self.advance();
                 Some(Node::Boolean(true))
             }
-            Some(Token::Bugatti) => {
+            Token::Bugatti => {
                 self.advance();
                 Some(Node::Bugatti)
             }
-            Some(Token::Identifier(name)) => {
+            Token::Identifier(ref name) => {
+                let val = name.clone();
                 self.advance();
-                Some(Node::Identifier(name.clone()))
+                Some(Node::Identifier(val))
             }
             _ => None,
         }
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek_token(&self) -> Option<&Token> {
         self.tokens.get(self.current)
     }
 
