@@ -1,5 +1,5 @@
 use crate::token::Token;
-use crate::ast::Node;
+use crate::ast::{Node, Operator};
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -30,6 +30,7 @@ impl Parser {
         match self.peek_token() {
             Some(Token::TouchGrass) => self.parse_var_declaration(),
             Some(Token::Print) => self.parse_print_statement(),
+            Some(Token::GoOutside) => self.parse_go_outside(),
             _ => None,
         }
     }
@@ -74,7 +75,91 @@ impl Parser {
         Some(Node::Print(Box::new(expr)))
     }
 
+    fn parse_go_outside(&mut self) -> Option<Node> {
+        self.advance(); // consume 'go outside'
+
+        if let Some(Token::If) = self.peek_token() {
+            self.advance();
+        } else {
+            return None;
+        }
+
+        let condition = self.parse_expression()?;
+
+        if let Some(Token::Then) = self.peek_token() {
+            self.advance();
+        } else {
+            return None;
+        }
+
+        let then_branch = self.parse_block()?;
+
+        Some(Node::GoOutside {
+            condition: Box::new(condition),
+            then_branch: Box::new(then_branch),
+        })
+    }
+
+    fn parse_block(&mut self) -> Option<Node> {
+        let mut statements = Vec::new();
+
+        while !self.is_at_end() {
+            match self.peek_token()? {
+                Token::FrFr => {
+                    self.advance();
+                    break;
+                }
+                _ => {
+                    if let Some(stmt) = self.parse_statement() {
+                        statements.push(stmt);
+                    }
+                }
+            }
+        }
+
+        Some(Node::Block(statements))
+    }
+
     fn parse_expression(&mut self) -> Option<Node> {
+        self.parse_comparison()
+    }
+
+    fn parse_comparison(&mut self) -> Option<Node> {
+        let left = self.parse_primary()?;
+
+        match self.peek_token()? {
+            Token::GreaterThan => {
+                self.advance();
+                let right = self.parse_primary()?;
+                Some(Node::BinaryOp {
+                    left: Box::new(left),
+                    operator: Operator::GreaterThan,
+                    right: Box::new(right),
+                })
+            }
+            Token::LessThan => {
+                self.advance();
+                let right = self.parse_primary()?;
+                Some(Node::BinaryOp {
+                    left: Box::new(left),
+                    operator: Operator::LessThan,
+                    right: Box::new(right),
+                })
+            }
+            Token::Equals => {
+                self.advance();
+                let right = self.parse_primary()?;
+                Some(Node::BinaryOp {
+                    left: Box::new(left),
+                    operator: Operator::Equals,
+                    right: Box::new(right),
+                })
+            }
+            _ => Some(left),
+        }
+    }
+
+    fn parse_primary(&mut self) -> Option<Node> {
         match self.peek_token()? {
             Token::Number(n) => {
                 let val = *n;
