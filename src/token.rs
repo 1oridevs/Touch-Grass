@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Clone)]
-pub enum TOken {
+pub enum Token {
     // Keywords for the lang
     Print,
 
