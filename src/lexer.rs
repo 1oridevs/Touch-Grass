@@ -29,6 +29,14 @@ impl Lexer {
         self.read_position += 1;
     }
 
+    fn peek_char(&self) -> char {
+        if self.read_position >= self.input.len() {
+            '\0'
+        } else {
+            self.input[self.read_position]
+        }
+    }
+
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
@@ -38,11 +46,41 @@ impl Lexer {
                 self.read_char();
                 Token::String(self.read_string())
             },
+            '>' => Token::GreaterThan,
+            '<' => Token::LessThan,
+            '=' => Token::Equals,
             _ => {
                 if self.ch.is_alphabetic() {
-                    let word = self.read_identifier();
+                    let word = self.read_word();
                     match word.as_str() {
+                        "touch" => {
+                            self.skip_whitespace();
+                            if self.read_word() == "grass" {
+                                Token::TouchGrass
+                            } else {
+                                Token::Identifier("touch".to_string())
+                            }
+                        },
+                        "go" => {
+                            self.skip_whitespace();
+                            if self.read_word() == "outside" {
+                                Token::GoOutside
+                            } else {
+                                Token::Identifier("go".to_string())
+                            }
+                        },
+                        "fr" => {
+                            self.skip_whitespace();
+                            if self.read_word() == "fr" {
+                                Token::FrFr
+                            } else {
+                                Token::Identifier("fr".to_string())
+                            }
+                        },
                         "print" => Token::Print,
+                        "as" => Token::As,
+                        "then" => Token::Then,
+                        "number" => Token::NumberType,
                         _ => Token::Identifier(word),
                     }
                 } else if self.ch.is_numeric() {
@@ -53,33 +91,37 @@ impl Lexer {
             }
         };
 
-        self.read_char();
+        if tok != Token::EOF {
+            self.read_char();
+        }
         tok
     }
 
-    fn read_identifier(&mut self) -> String {
-        let position = self.position;
+    fn read_word(&mut self) -> String {
+        let mut word = String::new();
         while self.ch.is_alphabetic() {
+            word.push(self.ch);
             self.read_char();
         }
-        self.input[position..self.position].iter().collect()
+        word
     }
 
     fn read_string(&mut self) -> String {
-        let position = self.position;
+        let mut string = String::new();
         while self.ch != '"' && self.ch != '\0' {
+            string.push(self.ch);
             self.read_char();
         }
-        self.input[position..self.position].iter().collect()
+        string
     }
 
     fn read_number(&mut self) -> i64 {
-        let position = self.position;
+        let mut num = String::new();
         while self.ch.is_numeric() {
+            num.push(self.ch);
             self.read_char();
         }
-        let num_str: String = self.input[position..self.position].iter().collect();
-        num_str.parse().unwrap_or(0)
+        num.parse().unwrap_or(0)
     }
 
     fn skip_whitespace(&mut self) {
