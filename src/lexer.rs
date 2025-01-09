@@ -77,6 +77,7 @@ impl Lexer {
                                 Token::Identifier("fr".to_string())
                             }
                         },
+                        "if" => Token::If,
                         "print" => Token::Print,
                         "as" => Token::As,
                         "then" => Token::Then,

@@ -6,6 +6,7 @@ pub enum Token {
     As,
     NumberType,
     GoOutside, // If state
+    If,
     Then, // Then Keyword
     FrFr, // Block Ending
 
