@@ -1,0 +1,7 @@
+[package]
+name = "touch-grass"
+version = "0.1.0"
+edition = "2021"
+description = "A programming language for those who need to touch grass"
+
+[dependencies]
