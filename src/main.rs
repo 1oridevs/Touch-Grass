@@ -1,4 +1,6 @@
 mod token;
+mod lexer;
+
 use std::io::Write;
 
 fn main() {
@@ -16,7 +18,15 @@ fn main() {
                     println!("Finally... touch grass my friend!");
                     break;
                 }
-                println!("You entered: {}", input.trim());
+                
+                let mut lexer = lexer::Lexer::new(input);
+                loop {
+                    let token = lexer.next_token();
+                    println!("{:?}", token);
+                    if token == token::Token::EOF {
+                        break;
+                    }
+                }
             }
             Err(error) => println!("error: {}", error),
         }
