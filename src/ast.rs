@@ -1,33 +1,28 @@
 #[derive(Debug)]
 pub enum Node {
-    // Program root
     Program(Vec<Node>),
 
-    // Statements
     VarDeclaration {
         name: String,
         var_type: String,
         value: Box<Node>,
     },
 
-    // Expressions
     Identifier(String),
     StringLiteral(String),
     NumberLiteral(i64),
-    Boolean(bool),  // cap/no_cap
-    Bugatti,        // our null/undefined
+    Boolean(bool),
+    Bugatti,
 
-    // Print statement
     Print(Box<Node>),
 
-    // Conditional statements
     GoOutside {
         condition: Box<Node>,
         then_branch: Box<Node>,
+        else_branch: Option<Box<Node>>,
     },
     Block(Vec<Node>),
     
-    // Binary operations (for comparisons)
     BinaryOp {
         left: Box<Node>,
         operator: Operator,
