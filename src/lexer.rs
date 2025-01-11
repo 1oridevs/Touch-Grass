@@ -1,10 +1,12 @@
 use crate::token::Token;
+use std::time::SystemTime;
 
 pub struct Lexer {
     input: Vec<char>,
     position: usize,
     read_position: usize,
     ch: char,
+    start_time: SystemTime,
 }
 
 impl Lexer {
@@ -14,6 +16,7 @@ impl Lexer {
             position: 0,
             read_position: 0,
             ch: '\0',
+            start_time: SystemTime::now(),
         };
         lexer.read_char();
         lexer
@@ -29,14 +32,6 @@ impl Lexer {
         self.read_position += 1;
     }
 
-    fn peek_char(&self) -> char {
-        if self.read_position >= self.input.len() {
-            '\0'
-        } else {
-            self.input[self.read_position]
-        }
-    }
-
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
@@ -46,9 +41,18 @@ impl Lexer {
                 self.read_char();
                 Token::String(self.read_string())
             },
-            '>' => Token::GreaterThan,
-            '<' => Token::LessThan,
-            '=' => Token::Equals,
+            '>' => {
+                self.read_char();
+                Token::GreaterThan
+            },
+            '<' => {
+                self.read_char();
+                Token::LessThan
+            },
+            '=' => {
+                self.read_char();
+                Token::Equals
+            },
             _ => {
                 if self.ch.is_alphabetic() {
                     let word = self.read_word();
@@ -61,14 +65,11 @@ impl Lexer {
                                 Token::Identifier("touch".to_string())
                             }
                         },
-                        "go" => {
-                            self.skip_whitespace();
-                            if self.read_word() == "outside" {
-                                Token::GoOutside
-                            } else {
-                                Token::Identifier("go".to_string())
-                            }
-                        },
+                        "go" => Token::Go,
+                        "outside" => Token::Outside,
+                        "if" => Token::If,
+                        "then" => Token::Then,
+                        "instead" => Token::Instead,
                         "fr" => {
                             self.skip_whitespace();
                             if self.read_word() == "fr" {
@@ -77,55 +78,52 @@ impl Lexer {
                                 Token::Identifier("fr".to_string())
                             }
                         },
+                        "print" => Token::Print,
+                        "as" => Token::As,
+                        "number" => Token::NumberType,
                         "cap" => Token::Cap,
                         "no_cap" => Token::NoCap,
                         "bugatti" => Token::Bugatti,
-                        "if" => Token::If,
-                        "print" => Token::Print,
-                        "as" => Token::As,
-                        "then" => Token::Then,
-                        "number" => Token::NumberType,
                         _ => Token::Identifier(word),
                     }
                 } else if self.ch.is_numeric() {
-                    Token::Number(self.read_number())
+                    let num = self.read_number();
+                    Token::Number(num)
                 } else {
+                    self.read_char();
                     Token::EOF
                 }
             }
         };
 
-        if tok != Token::EOF {
-            self.read_char();
-        }
         tok
     }
 
     fn read_word(&mut self) -> String {
-        let mut word = String::new();
-        while self.ch.is_alphabetic() {
-            word.push(self.ch);
+        let position = self.position;
+        while self.ch.is_alphabetic() || self.ch == '_' {
             self.read_char();
         }
-        word
+        self.input[position..self.position].iter().collect()
     }
 
     fn read_string(&mut self) -> String {
-        let mut string = String::new();
+        let position = self.position;
         while self.ch != '"' && self.ch != '\0' {
-            string.push(self.ch);
             self.read_char();
         }
-        string
+        let str_val = self.input[position..self.position].iter().collect();
+        self.read_char(); // consume closing quote
+        str_val
     }
 
     fn read_number(&mut self) -> i64 {
-        let mut num = String::new();
+        let position = self.position;
         while self.ch.is_numeric() {
-            num.push(self.ch);
             self.read_char();
         }
-        num.parse().unwrap_or(0)
+        let num_str: String = self.input[position..self.position].iter().collect();
+        num_str.parse().unwrap_or(0)
     }
 
     fn skip_whitespace(&mut self) {

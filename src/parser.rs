@@ -30,7 +30,7 @@ impl Parser {
         match self.peek_token() {
             Some(Token::TouchGrass) => self.parse_var_declaration(),
             Some(Token::Print) => self.parse_print_statement(),
-            Some(Token::GoOutside) => self.parse_go_outside(),
+            Some(Token::Go) => self.parse_go_outside(),
             _ => None,
         }
     }
@@ -70,14 +70,22 @@ impl Parser {
     }
 
     fn parse_print_statement(&mut self) -> Option<Node> {
-        self.advance(); // consume Print
+        self.advance();
         let expr = self.parse_expression()?;
         Some(Node::Print(Box::new(expr)))
     }
 
     fn parse_go_outside(&mut self) -> Option<Node> {
-        self.advance(); // consume 'go outside'
+        self.advance(); // consume 'go'
 
+        // Expect 'outside' token
+        if let Some(Token::Outside) = self.peek_token() {
+            self.advance();
+        } else {
+            return None;
+        }
+
+        // Expect 'if' token
         if let Some(Token::If) = self.peek_token() {
             self.advance();
         } else {
@@ -86,6 +94,7 @@ impl Parser {
 
         let condition = self.parse_expression()?;
 
+        // Expect 'then' token
         if let Some(Token::Then) = self.peek_token() {
             self.advance();
         } else {
@@ -94,29 +103,43 @@ impl Parser {
 
         let then_branch = self.parse_block()?;
 
+        // Check for 'instead' (else branch)
+        let else_branch = if let Some(Token::Instead) = self.peek_token() {
+            self.advance();
+            Some(Box::new(self.parse_block()?))
+        } else {
+            None
+        };
+
         Some(Node::GoOutside {
             condition: Box::new(condition),
             then_branch: Box::new(then_branch),
+            else_branch,
         })
     }
 
     fn parse_block(&mut self) -> Option<Node> {
         let mut statements = Vec::new();
-
+    
         while !self.is_at_end() {
             match self.peek_token()? {
                 Token::FrFr => {
                     self.advance();
                     break;
                 }
+                Token::Instead => {
+                    break;
+                }
                 _ => {
                     if let Some(stmt) = self.parse_statement() {
                         statements.push(stmt);
+                    } else {
+                        self.advance(); // Skip if no understand
                     }
                 }
             }
         }
-
+    
         Some(Node::Block(statements))
     }
 

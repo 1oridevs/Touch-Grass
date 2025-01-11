@@ -5,9 +5,11 @@ pub enum Token {
     TouchGrass, // var for nerds
     As,
     NumberType,
-    GoOutside, // If state
+    Go,
+    Outside,
     If,
-    Then, // Then Keyword
+    Then,
+    Instead,
     FrFr, // Block Ending
 
     // REAL-LIFE OPERATORS
