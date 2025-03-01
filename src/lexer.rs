@@ -50,7 +50,6 @@ impl Lexer {
             _ => {
                 if self.ch.is_alphabetic() {
                     let word = self.read_word();
-                    // Check for keywords
                     return match word.as_str() {
                         "touch" => {
                             self.skip_whitespace();
@@ -79,6 +78,10 @@ impl Lexer {
                         "cap" => Token::Cap,
                         "no_cap" => Token::NoCap,
                         "bugatti" => Token::Bugatti,
+                        // NEW keywords:
+                        "set" => Token::Set,
+                        "to" => Token::To,
+                        "while" => Token::While,
                         _ => Token::Identifier(word),
                     };
                 } else if self.ch.is_numeric() {

@@ -8,6 +8,12 @@ pub enum Node {
         value: Box<Node>,
     },
 
+    // NEW: Variable Assignment
+    Assignment {
+        name: String,
+        value: Box<Node>,
+    },
+
     Identifier(String),
     StringLiteral(String),
     NumberLiteral(i64),
@@ -22,6 +28,12 @@ pub enum Node {
         else_branch: Option<Box<Node>>,
     },
     Block(Vec<Node>),
+
+    // NEW: While Loop
+    WhileLoop {
+        condition: Box<Node>,
+        body: Box<Node>,
+    },
     
     BinaryOp {
         left: Box<Node>,

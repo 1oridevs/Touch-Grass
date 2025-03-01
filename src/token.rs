@@ -12,6 +12,11 @@ pub enum Token {
     Instead,
     FrFr, // Block Ending
 
+    // NEW: Assignment and While Loop keywords
+    Set,
+    To,
+    While,
+
     // REAL-LIFE OPERATORS
     NoCap,
     Cap,

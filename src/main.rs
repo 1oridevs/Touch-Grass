@@ -6,7 +6,7 @@ mod ast;
 use std::io::Write;
 
 fn main() {
-    println!("Touch Grass Programming Language v0.1.0");
+    println!("Touch Grass Programming Language v0.2.0");
     println!("Because you clearly need to...");
 
     loop {

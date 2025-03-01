@@ -34,6 +34,8 @@ impl Parser {
             Some(Token::TouchGrass) => self.parse_var_declaration(),
             Some(Token::Print) => self.parse_print_statement(),
             Some(Token::Go) => self.parse_go_outside(),
+            Some(Token::Set) => self.parse_assignment(),
+            Some(Token::While) => self.parse_while_loop(),
             _ => None,
         }
     }
@@ -125,6 +127,54 @@ impl Parser {
         })
     }
 
+    fn parse_assignment(&mut self) -> Option<Node> {
+        self.advance(); // consume 'set'
+
+        let name = match self.peek_token() {
+            Some(Token::Identifier(ref name)) => {
+                let n = name.clone();
+                self.advance();
+                n
+            },
+            _ => {
+                eprintln!("Error: Expected identifier after 'set'");
+                return None;
+            }
+        };
+
+        if let Some(Token::To) = self.peek_token() {
+            self.advance(); // consume 'to'
+        } else {
+            eprintln!("Error: Expected 'to' after identifier in assignment");
+            return None;
+        }
+
+        let value = self.parse_expression()?;
+        Some(Node::Assignment {
+            name,
+            value: Box::new(value),
+        })
+    }
+
+    fn parse_while_loop(&mut self) -> Option<Node> {
+        self.advance(); // consume 'while'
+
+        let condition = self.parse_expression()?;
+    
+        if let Some(Token::Then) = self.peek_token() {
+            self.advance(); // consume 'then'
+        } else {
+            eprintln!("Error: Expected 'then' after while condition");
+            return None;
+        }
+
+        let body = self.parse_block()?;
+        Some(Node::WhileLoop {
+            condition: Box::new(condition),
+            body: Box::new(body),
+        })
+    }
+
     fn parse_block(&mut self) -> Option<Node> {
         let mut statements = Vec::new();
     
@@ -191,7 +241,6 @@ impl Parser {
         Some(left)
     }
 
-    // Parse primary values: numbers, strings, booleans, identifiers, bugatti literal.
     fn parse_factor(&mut self) -> Option<Node> {
         match self.peek_token()? {
             Token::Number(n) => {
