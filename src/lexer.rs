@@ -39,24 +39,19 @@ impl Lexer {
             '\0' => Token::EOF,
             '"' => {
                 self.read_char();
-                Token::String(self.read_string())
+                let s = self.read_string();
+                Token::String(s)
             },
-            '>' => {
-                self.read_char();
-                Token::GreaterThan
-            },
-            '<' => {
-                self.read_char();
-                Token::LessThan
-            },
-            '=' => {
-                self.read_char();
-                Token::Equals
-            },
+            '>' => { self.read_char(); Token::GreaterThan },
+            '<' => { self.read_char(); Token::LessThan },
+            '=' => { self.read_char(); Token::Equals },
+            '+' => { self.read_char(); Token::Plus },
+            '-' => { self.read_char(); Token::Minus },
             _ => {
                 if self.ch.is_alphabetic() {
                     let word = self.read_word();
-                    match word.as_str() {
+                    // Check for keywords
+                    return match word.as_str() {
                         "touch" => {
                             self.skip_whitespace();
                             if self.read_word() == "grass" {
@@ -85,13 +80,15 @@ impl Lexer {
                         "no_cap" => Token::NoCap,
                         "bugatti" => Token::Bugatti,
                         _ => Token::Identifier(word),
-                    }
+                    };
                 } else if self.ch.is_numeric() {
                     let num = self.read_number();
-                    Token::Number(num)
+                    return Token::Number(num);
                 } else {
+                    // Return an illegal token for unexpected characters
+                    let illegal = Token::Illegal(self.ch);
                     self.read_char();
-                    Token::EOF
+                    illegal
                 }
             }
         };
@@ -113,7 +110,12 @@ impl Lexer {
             self.read_char();
         }
         let str_val = self.input[position..self.position].iter().collect();
-        self.read_char(); // consume closing quote
+        if self.ch == '"' {
+            self.read_char(); // consume closing quote
+        } else {
+            // Handle unterminated string literal if needed
+            eprintln!("Error: Unterminated string literal");
+        }
         str_val
     }
 

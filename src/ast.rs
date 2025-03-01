@@ -35,4 +35,6 @@ pub enum Operator {
     GreaterThan,
     LessThan,
     Equals,
+    Plus,
+    Minus,
 }

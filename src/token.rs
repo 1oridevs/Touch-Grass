@@ -2,7 +2,7 @@
 pub enum Token {
     // Keywords for the lang
     Print,
-    TouchGrass, // var for nerds
+    TouchGrass, // variable declaration keyword
     As,
     NumberType,
     Go,
@@ -17,8 +17,6 @@ pub enum Token {
     Cap,
     Bugatti,
 
-
-
     // Literals for the lang
     String(String),
     Number(i64),
@@ -30,9 +28,9 @@ pub enum Token {
     Plus,
     Minus,
 
-    // Identifiers and everything else
-
+    // Identifiers and others
     Identifier(String),
     Comment,
+    Illegal(char),
     EOF,
 }

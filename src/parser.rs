@@ -20,6 +20,9 @@ impl Parser {
         while !self.is_at_end() {
             if let Some(stmt) = self.parse_statement() {
                 statements.push(stmt);
+            } else {
+                // Skip token on error to avoid infinite loops
+                self.advance();
             }
         }
 
@@ -37,11 +40,12 @@ impl Parser {
 
     fn parse_var_declaration(&mut self) -> Option<Node> {
         self.advance(); // consume TouchGrass
-        
+
         let var_type = if let Some(Token::NumberType) = self.peek_token() {
             self.advance();
             "number".to_string()
         } else {
+            eprintln!("Error: Expected number type after touch grass");
             return None;
         };
 
@@ -51,12 +55,16 @@ impl Parser {
                 self.advance();
                 name
             }
-            _ => return None,
+            _ => {
+                eprintln!("Error: Expected identifier for variable name");
+                return None;
+            }
         };
 
         if let Some(Token::As) = self.peek_token() {
             self.advance();
         } else {
+            eprintln!("Error: Expected 'as' after variable name");
             return None;
         }
 
@@ -70,7 +78,7 @@ impl Parser {
     }
 
     fn parse_print_statement(&mut self) -> Option<Node> {
-        self.advance();
+        self.advance(); // consume Print
         let expr = self.parse_expression()?;
         Some(Node::Print(Box::new(expr)))
     }
@@ -78,32 +86,31 @@ impl Parser {
     fn parse_go_outside(&mut self) -> Option<Node> {
         self.advance(); // consume 'go'
 
-        // Expect 'outside' token
         if let Some(Token::Outside) = self.peek_token() {
             self.advance();
         } else {
+            eprintln!("Error: Expected 'outside' after 'go'");
             return None;
         }
 
-        // Expect 'if' token
         if let Some(Token::If) = self.peek_token() {
             self.advance();
         } else {
+            eprintln!("Error: Expected 'if' after 'go outside'");
             return None;
         }
 
         let condition = self.parse_expression()?;
 
-        // Expect 'then' token
         if let Some(Token::Then) = self.peek_token() {
             self.advance();
         } else {
+            eprintln!("Error: Expected 'then' after condition");
             return None;
         }
 
         let then_branch = self.parse_block()?;
 
-        // Check for 'instead' (else branch)
         let else_branch = if let Some(Token::Instead) = self.peek_token() {
             self.advance();
             Some(Box::new(self.parse_block()?))
@@ -122,67 +129,70 @@ impl Parser {
         let mut statements = Vec::new();
     
         while !self.is_at_end() {
-            match self.peek_token()? {
-                Token::FrFr => {
-                    self.advance();
-                    break;
-                }
-                Token::Instead => {
-                    break;
-                }
-                _ => {
-                    if let Some(stmt) = self.parse_statement() {
-                        statements.push(stmt);
-                    } else {
-                        self.advance(); // Skip if no understand
-                    }
-                }
+            if let Some(Token::FrFr) = self.peek_token() {
+                self.advance(); // consume FrFr and end the block
+                break;
+            }
+            if let Some(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            } else {
+                // In case of error, advance to avoid infinite loop
+                self.advance();
             }
         }
     
         Some(Node::Block(statements))
     }
 
+    // Expression parser supporting comparisons and addition/subtraction
     fn parse_expression(&mut self) -> Option<Node> {
         self.parse_comparison()
     }
 
     fn parse_comparison(&mut self) -> Option<Node> {
-        let left = self.parse_primary()?;
+        let mut left = self.parse_term()?;
 
-        match self.peek_token()? {
-            Token::GreaterThan => {
-                self.advance();
-                let right = self.parse_primary()?;
-                Some(Node::BinaryOp {
-                    left: Box::new(left),
-                    operator: Operator::GreaterThan,
-                    right: Box::new(right),
-                })
-            }
-            Token::LessThan => {
-                self.advance();
-                let right = self.parse_primary()?;
-                Some(Node::BinaryOp {
-                    left: Box::new(left),
-                    operator: Operator::LessThan,
-                    right: Box::new(right),
-                })
-            }
-            Token::Equals => {
-                self.advance();
-                let right = self.parse_primary()?;
-                Some(Node::BinaryOp {
-                    left: Box::new(left),
-                    operator: Operator::Equals,
-                    right: Box::new(right),
-                })
-            }
-            _ => Some(left),
+        while let Some(tok) = self.peek_token() {
+            let op = match tok {
+                Token::GreaterThan => Operator::GreaterThan,
+                Token::LessThan => Operator::LessThan,
+                Token::Equals => Operator::Equals,
+                _ => break,
+            };
+            self.advance(); // consume operator
+            let right = self.parse_term()?;
+            left = Node::BinaryOp {
+                left: Box::new(left),
+                operator: op,
+                right: Box::new(right),
+            };
         }
+        Some(left)
     }
 
-    fn parse_primary(&mut self) -> Option<Node> {
+    // Added support for addition and subtraction
+    fn parse_term(&mut self) -> Option<Node> {
+        let mut left = self.parse_factor()?;
+
+        while let Some(tok) = self.peek_token() {
+            let op = match tok {
+                Token::Plus => Operator::Plus,
+                Token::Minus => Operator::Minus,
+                _ => break,
+            };
+            self.advance(); // consume operator
+            let right = self.parse_factor()?;
+            left = Node::BinaryOp {
+                left: Box::new(left),
+                operator: op,
+                right: Box::new(right),
+            };
+        }
+        Some(left)
+    }
+
+    // Parse primary values: numbers, strings, booleans, identifiers, bugatti literal.
+    fn parse_factor(&mut self) -> Option<Node> {
         match self.peek_token()? {
             Token::Number(n) => {
                 let val = *n;
@@ -211,7 +221,11 @@ impl Parser {
                 self.advance();
                 Some(Node::Identifier(val))
             }
-            _ => None,
+            _ => {
+                eprintln!("Error: Unexpected token {:?}", self.peek_token());
+                self.advance();
+                None
+            }
         }
     }
 

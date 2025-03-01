@@ -2,15 +2,12 @@ mod token;
 mod lexer;
 mod parser;
 mod ast;
-mod interpreter;
 
 use std::io::Write;
 
 fn main() {
     println!("Touch Grass Programming Language v0.1.0");
     println!("Because you clearly need to...");
-
-    let mut interpreter = interpreter::Interpreter::new();
 
     loop {
         let mut input = String::new();
@@ -37,13 +34,9 @@ fn main() {
 
                 let mut parser = parser::Parser::new(tokens);
                 let ast = parser.parse();
-                
-                match interpreter.interpret(ast) {
-                    Ok(_) => (),
-                    Err(e) => println!("🌱 Error: {}", e),
-                }
+                println!("AST: {:#?}", ast);
             }
-            Err(error) => println!("error: {}", error),
+            Err(error) => println!("Error: {}", error),
         }
     }
 }
