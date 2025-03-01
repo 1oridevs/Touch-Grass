@@ -116,7 +116,6 @@ impl Lexer {
         if self.ch == '"' {
             self.read_char(); // consume closing quote
         } else {
-            // Handle unterminated string literal if needed
             eprintln!("Error: Unterminated string literal");
         }
         str_val

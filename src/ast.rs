@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Node {
     Program(Vec<Node>),
 
@@ -42,7 +42,7 @@ pub enum Node {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Operator {
     GreaterThan,
     LessThan,

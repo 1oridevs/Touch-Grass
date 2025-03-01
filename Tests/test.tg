@@ -1,9 +1,1 @@
-touch grass number a as 5
-set a to 10
-print a
-
-touch grass number i as 0
-while i < 5 then
-    print i
-    set i to i + 1
-fr fr
+print "Hello World!"

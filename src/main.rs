@@ -2,12 +2,14 @@ mod token;
 mod lexer;
 mod parser;
 mod ast;
+mod interpreter;
 
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+use interpreter::Interpreter;
 
-/// Processes a source string by lexing, parsing, and printing the resulting AST.
+/// Processes a source string: lexes, parses, then interprets the code.
 fn run_source(source: String) {
     let mut lexer = lexer::Lexer::new(source);
     let mut tokens = Vec::new();
@@ -22,12 +24,15 @@ fn run_source(source: String) {
 
     let mut parser = parser::Parser::new(tokens);
     let ast = parser.parse();
-    println!("AST: {:#?}", ast);
+    
+    // Instead of printing the AST, run the interpreter.
+    let mut interp = Interpreter::new();
+    interp.interpret(ast);
 }
 
 /// Runs the interactive REPL.
 fn run_repl() {
-    println!("Touch Grass Programming Language v0.2.0");
+    println!("Touch Grass Programming Language v0.3.0");
     println!("Because you clearly need to...");
 
     loop {
@@ -48,12 +53,11 @@ fn run_repl() {
     }
 }
 
-/// Entry point: if a file path is provided as an argument, run that file; otherwise, start the REPL.
+/// Entry point: if a file path is provided, run that file; otherwise, start the REPL.
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 1 {
-        // A file path was provided: read and run the file
         let filename = &args[1];
         match fs::read_to_string(filename) {
             Ok(contents) => {
@@ -63,7 +67,6 @@ fn main() {
             Err(e) => eprintln!("Error reading file {}: {}", filename, e),
         }
     } else {
-        // No file provided: launch the interactive REPL
         run_repl();
     }
 }
